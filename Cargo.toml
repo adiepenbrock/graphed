@@ -1,0 +1,11 @@
+[package]
+name = "graphed"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Andreas Diepenbrock"]
+
+repository = "https://github.com/adiepenbrock/graphed"
+
+
+[dependencies]

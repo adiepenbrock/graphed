@@ -176,6 +176,16 @@ impl<N, E, Ix: Indexable> Graph<N, E, Ix> {
         self.edges.len()
     }
 
+    /// Returns a reference to the list of nodes.
+    pub fn raw_nodes(&self) -> &[Node<N, Ix>] {
+        &self.nodes
+    }
+
+    /// Returns a reference to the list of edges.
+    pub fn raw_edges(&self) -> &[Edge<E, Ix>] {
+        &self.edges
+    }
+
     /// Add a node with associated data to the graph. Returns the `NodeIndex` of the new node.
     pub fn add_node(&mut self, data: N) -> NodeIndex<Ix> {
         let idx = NodeIndex::new(self.nodes.len());

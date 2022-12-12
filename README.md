@@ -29,7 +29,7 @@ use graphed::graph::{Graph, GraphKind};
 pub struct CustomNode(usize);
 pub struct CustomEdge(usize);
 
-let mut gr = Graph::<&str, usize>::new(GraphKind::Directed);
+let mut gr = Graph::<CustomNode, CustomEdge>::new(GraphKind::Directed);
 let idx_n1 = gr.add_node(CustomNode(1));
 let idx_n2 = gr.add_node(CustomNode(2));
 

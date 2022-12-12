@@ -11,6 +11,10 @@ pub struct Node<N, Ix: Indexable = DefaultIndex> {
     index: NodeIndex<Ix>,
     /// The associated data of the node.  
     inner: N,
+    /// A list of all incoming edges of the node.
+    incoming: Vec<EdgeIndex<Ix>>,
+    /// A list of all outgoing edges of the node.
+    outgoing: Vec<EdgeIndex<Ix>>,
 }
 
 impl<N, Ix: Indexable> Node<N, Ix> {
@@ -18,6 +22,8 @@ impl<N, Ix: Indexable> Node<N, Ix> {
         Node {
             index: idx,
             inner: data,
+            incoming: Vec::new(),
+            outgoing: Vec::new(),
         }
     }
 
@@ -29,6 +35,14 @@ impl<N, Ix: Indexable> Node<N, Ix> {
     /// Returns the associated data of the node.
     pub fn data(&self) -> &N {
         &self.inner
+    }
+
+    pub fn incoming(&self) -> &[EdgeIndex<Ix>] {
+        &self.incoming
+    }
+
+    pub fn outgoing(&self) -> &[EdgeIndex<Ix>] {
+        &self.outgoing
     }
 }
 
@@ -214,7 +228,42 @@ impl<N, E, Ix: Indexable> Graph<N, E, Ix> {
         let edge = Edge::new(idx, source, target, data);
         self.edges.push(edge);
 
+        // add incoming and outgoing edges to the source and target node
+        self.nodes
+            .get_mut(source.index())
+            .unwrap()
+            .outgoing
+            .push(idx);
+        self.nodes
+            .get_mut(target.index())
+            .unwrap()
+            .incoming
+            .push(idx);
+
         Ok(idx)
+    }
+
+    /// Returns a reference to the node with the given `idx`. If the node does not exist,
+    /// `None` is returned.
+    pub fn get_node(&self, idx: NodeIndex<Ix>) -> Option<&Node<N, Ix>> {
+        self.nodes.get(idx.index())
+    }
+
+    /// Returns a mutable reference to the node with the given `idx`. If the node does not 
+    /// exist, `None` is returned.
+    pub fn get_node_mut(&mut self, idx: NodeIndex<Ix>) -> Option<&mut Node<N, Ix>> {
+        self.nodes.get_mut(idx.index())
+    }
+
+    /// Returns a list of all `NodeIndex`es that are direct predecessors of the given `node`.
+    pub fn predecessor_of_node(&self, idx: NodeIndex<Ix>) -> Vec<&NodeIndex<Ix>> {
+        let mut predecessors = Vec::new();
+
+        for edge in &self.nodes[idx.index()].incoming {
+            predecessors.push(self.edges[edge.index()].source());
+        }
+
+        predecessors
     }
 }
 
@@ -265,5 +314,37 @@ pub mod tests {
         let result = graph.add_edge(source, NodeIndex::new(4), 3);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), GraphError::NodeNotFound);
+    }
+
+    #[test]
+    fn test_add_in_out_coming_index_to_node() {
+        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let source = graph.add_node(1);
+        let target = graph.add_node(2);
+
+        let idx = graph.add_edge(source, target, 3).unwrap();
+
+        assert_eq!(idx.index(), 0);
+        assert_eq!(graph.node_count(), 2);
+        assert_eq!(graph.edge_count(), 1);
+        assert_eq!(graph.nodes[source.index()].outgoing, vec![idx]);
+        assert_eq!(graph.nodes[target.index()].incoming, vec![idx]);
+    }
+
+    #[test]
+    fn test_get_predecessor_of_node() {
+        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let idx_1 = graph.add_node(1);
+        let idx_2 = graph.add_node(2);
+        let idx_3 = graph.add_node(3);
+        let _ = graph.add_edge(idx_1, idx_2, 42);
+        let _ = graph.add_edge(idx_2, idx_3, 84);
+
+        // because the method `predecessor_of_node` returns just a list of the direct
+        // predecessors, the list should only contain the node `idx_2`...
+        let pred = graph.predecessor_of_node(idx_3);
+        assert_eq!(pred.len(), 1);
+        assert_eq!(pred[0].index(), idx_2.index());
+        assert_eq!(pred, vec![&idx_2]);
     }
 }

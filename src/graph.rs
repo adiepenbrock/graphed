@@ -1,7 +1,7 @@
 use crate::indices::{DefaultIndex, EdgeIndex, Indexable, NodeIndex};
 
 /// A `Node` is used as the primary data structure in the `Graph`. It contains an index
-/// and associated data of the node itself. 
+/// and associated data of the node itself.
 ///
 /// # Type Parameters
 /// * `N`: The type of the associated data.
@@ -249,7 +249,7 @@ impl<N, E, Ix: Indexable> Graph<N, E, Ix> {
         self.nodes.get(idx.index())
     }
 
-    /// Returns a mutable reference to the node with the given `idx`. If the node does not 
+    /// Returns a mutable reference to the node with the given `idx`. If the node does not
     /// exist, `None` is returned.
     pub fn get_node_mut(&mut self, idx: NodeIndex<Ix>) -> Option<&mut Node<N, Ix>> {
         self.nodes.get_mut(idx.index())

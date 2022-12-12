@@ -5,24 +5,24 @@ use crate::graph::{Graph, GraphKind};
 static EDGE: [&'static str; 2] = ["->", "--"];
 static TYPE: [&'static str; 2] = ["digraph", "graph"];
 
-/// Prints a given `Graph` in the DOT format to the given `Write` object. The `Node` 
+/// Prints a given `Graph` in the DOT format to the given `Write` object. The `Node`
 /// and `Edge` types must satisfy the `Display` trait.
-/// 
+///
 /// # Type parameters
 /// * `N`: The type of the nodes in the graph.
 /// * `E`: The type of the edges in the graph.
-/// 
+///
 /// # Example
 /// To print a graph into a `String` and print it to the console:
 /// ```
 /// use graphed::graph::{Graph, GraphKind};
 /// use graphed::printer::dot::print_graph_dot;
-/// 
+///
 /// let mut gr = Graph::<&str, usize>::new(GraphKind::Directed);
 /// let idx_n1 = gr.add_node("n1");
 /// let idx_n2 = gr.add_node("n2");
 /// gr.add_edge(idx_n1, idx_n2, 123);
-/// 
+///
 /// let mut out = String::new();
 /// print_graph_dot(&gr, &mut out);
 /// println!("{}", out);

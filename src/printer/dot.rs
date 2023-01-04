@@ -7,6 +7,11 @@ static TYPE: [&'static str; 2] = ["digraph", "graph"];
 
 /// Prints a given `Graph` in the DOT format to the given `Write` object. The `Node`
 /// and `Edge` types must satisfy the `Display` trait.
+/// Transforms a `Graph` into a simple DOT-formatted string representation and writes it to a given
+/// output target, `out`. The output target must implement the `std::fmt::Writer` trait. Please
+/// note that this function does not support the annotation of attributes to elements. To get
+/// an extended version of this function that also supports attributes, please see
+/// `print_graph_dot_extended`.
 ///
 /// # Type parameters
 /// * `N`: The type of the nodes in the graph.
@@ -27,49 +32,37 @@ static TYPE: [&'static str; 2] = ["digraph", "graph"];
 /// print_graph_dot(&gr, &mut out);
 /// println!("{}", out);
 /// ```
-pub fn print_graph_dot<N, E>(graph: &Graph<N, E>, out: &mut dyn Write)
-where
-    N: std::fmt::Display,
-    E: std::fmt::Display,
-{
+pub fn print_graph_dot<N, E>(graph: &Graph<N, E>, out: &mut dyn Write) {
+    let mut buf = String::new();
+
     let level = 1;
-    let graph_type = match graph.kind() {
-        GraphKind::Directed => TYPE[0],
-        GraphKind::Undirected => TYPE[1],
+    let (graph_type, edge_type) = match graph.kind() {
+        GraphKind::Directed => (TYPE[0], EDGE[0]),
+        GraphKind::Undirected => (TYPE[1], EDGE[1]),
     };
 
-    writeln!(out, "{} {{", graph_type).unwrap();
+    buf.push_str(&format!("{} {{\n", graph_type));
 
     for node in graph.raw_nodes() {
-        writeln!(
-            out,
-            "{}{} [label=\"{}\"];",
+        buf.push_str(&format!(
+            "{}{};\n",
             " ".repeat(4 * level),
-            node.index().index(),
-            node.data()
-        )
-        .unwrap();
+            node.index().index()
+        ));
     }
 
-    let edge_type = match graph.kind() {
-        GraphKind::Directed => EDGE[0],
-        GraphKind::Undirected => EDGE[1],
-    };
-
     for edge in graph.raw_edges() {
-        writeln!(
-            out,
-            "{}{} {} {} [label=\"{}\"];",
+        buf.push_str(&format!(
+            "{}{} {} {};\n",
             " ".repeat(4 * level),
             edge.source().index(),
             edge_type,
-            edge.target().index(),
-            edge.data(),
-        )
-        .unwrap();
+            edge.target().index()
+        ));
     }
 
-    write!(out, "}}").unwrap();
+    buf.push_str("}");
+    out.write_str(buf.as_str()).unwrap();
 }
 
 #[cfg(test)]
@@ -85,9 +78,6 @@ pub mod tests {
 
         let mut out = String::new();
         print_graph_dot(&gr, &mut out);
-        assert_eq!(
-            out,
-            "digraph {\n    0 [label=\"n1\"];\n    1 [label=\"n2\"];\n    0 -> 1 [label=\"123\"];\n}\n".trim()
-        );
+        assert_eq!(out, "digraph {\n    0;\n    1;\n    0 -> 1;\n}".trim());
     }
 }

@@ -255,6 +255,68 @@ impl<N, E, Ix: Indexable> Graph<N, E, Ix> {
         self.nodes.get_mut(idx.index())
     }
 
+    pub fn has_edge(&self, source: &NodeIndex<Ix>, target: &NodeIndex<Ix>) -> bool {
+        self.find_edge(source, target).is_some()
+    }
+
+    pub fn find_edge(
+        &self,
+        source: &NodeIndex<Ix>,
+        target: &NodeIndex<Ix>,
+    ) -> Option<&EdgeIndex<Ix>> {
+        match self.kind {
+            GraphKind::Directed => self.find_directed_edge(source, target),
+            GraphKind::Undirected => self.find_undirected_edge(source, target),
+        }
+    }
+
+    pub fn find_directed_edge(
+        &self,
+        source: &NodeIndex<Ix>,
+        target: &NodeIndex<Ix>,
+    ) -> Option<&EdgeIndex<Ix>> {
+        let node = &self.nodes[source.index()];
+        for eidx in node.outgoing() {
+            let edge = match self.edges.get(eidx.index()) {
+                Some(e) => e,
+                None => return None,
+            };
+            if edge.target().index() == target.index() {
+                return Some(eidx);
+            }
+        }
+        None
+    }
+
+    pub fn find_undirected_edge(
+        &self,
+        source: &NodeIndex<Ix>,
+        target: &NodeIndex<Ix>,
+    ) -> Option<&EdgeIndex<Ix>> {
+        let node = &self.nodes[source.index()];
+
+        for eidx in node.outgoing() {
+            let edge = match self.edges.get(eidx.index()) {
+                Some(e) => e,
+                None => return None,
+            };
+            if edge.target().index() == target.index() {
+                return Some(eidx);
+            }
+        }
+        for eidx in node.incoming() {
+            let edge = match self.edges.get(eidx.index()) {
+                Some(e) => e,
+                None => return None,
+            };
+            if edge.source().index() == target.index() {
+                return Some(eidx);
+            }
+        }
+
+        None
+    }
+
     /// Returns a list of all `NodeIndex`es that are direct predecessors of the given `node`.
     pub fn predecessor_of_node(&self, idx: NodeIndex<Ix>) -> Vec<&NodeIndex<Ix>> {
         let mut predecessors = Vec::new();
@@ -346,5 +408,43 @@ pub mod tests {
         assert_eq!(pred.len(), 1);
         assert_eq!(pred[0].index(), idx_2.index());
         assert_eq!(pred, vec![&idx_2]);
+    }
+
+    #[test]
+    fn test_find_edge_directed() {
+        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let idx_1 = graph.add_node(1);
+        let idx_2 = graph.add_node(2);
+        let idx_3 = graph.add_node(3);
+        let _ = graph.add_edge(idx_1, idx_2, 42);
+        let _ = graph.add_edge(idx_2, idx_3, 84);
+
+        let e1 = graph.find_edge(&idx_1, &idx_2);
+        assert!(e1.is_some());
+        assert_eq!(e1.unwrap().index(), 0);
+        let e2 = graph.find_directed_edge(&idx_1, &idx_2);
+        assert!(e2.is_some());
+        assert_eq!(e2.unwrap().index(), 0);
+    }
+
+    #[test]
+    fn test_find_edge_undirected() {
+        let mut graph = Graph::<usize, usize>::new(GraphKind::Undirected);
+        let idx_1 = graph.add_node(1);
+        let idx_2 = graph.add_node(2);
+        let idx_3 = graph.add_node(3);
+        let _ = graph.add_edge(idx_1, idx_2, 42);
+        let _ = graph.add_edge(idx_2, idx_3, 84);
+
+        let e1 = graph.find_edge(&idx_1, &idx_2);
+        assert!(e1.is_some());
+        assert_eq!(e1.unwrap().index(), 0);
+        let e2 = graph.find_undirected_edge(&idx_1, &idx_2);
+        assert!(e2.is_some());
+        assert_eq!(e2.unwrap().index(), 0);
+
+        let e3 = graph.find_undirected_edge(&idx_2, &idx_1);
+        assert!(e3.is_some());
+        assert_eq!(e3.unwrap().index(), 0);
     }
 }

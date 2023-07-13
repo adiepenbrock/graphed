@@ -6,6 +6,7 @@ use crate::indices::{DefaultIndex, EdgeIndex, Indexable, NodeIndex};
 /// # Type Parameters
 /// * `N`: The type of the associated data.
 /// * `Ix`: The type of the index. This is usually `DefaultIndex` which is `u32`.  
+#[derive(Clone, Debug)]
 pub struct Node<N, Ix: Indexable = DefaultIndex> {
     /// The index of the node. This is used to identify the node in the graph.
     index: NodeIndex<Ix>,
@@ -53,6 +54,7 @@ impl<N, Ix: Indexable> Node<N, Ix> {
 /// # Type Parameters
 /// * `E`: The type of the associated data.
 /// * `Ix`: The type of the index. This is usually `DefaultIndex` which is `u32`.
+#[derive(Clone, Debug)]
 pub struct Edge<E, Ix: Indexable = DefaultIndex> {
     /// The index of the edge. This is used to identify the edge in the graph.
     index: EdgeIndex<Ix>,
@@ -117,7 +119,7 @@ impl<E, Ix: Indexable> Edge<E, Ix> {
 
 /// A `GraphKind` specifies the direction of edges in a `Graph`. It can be either `Directed`
 /// or `Undirected`.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum GraphKind {
     Directed,
     Undirected,
@@ -160,6 +162,7 @@ pub enum GraphError {
 /// gr.add_edge(idx_node1, idx_node2, 1);
 /// ```
 ///
+#[derive(Clone, Debug)]
 pub struct Graph<N, E, Ix: Indexable = DefaultIndex> {
     kind: GraphKind,
     nodes: Vec<Node<N, Ix>>,
@@ -257,6 +260,10 @@ impl<N, E, Ix: Indexable> Graph<N, E, Ix> {
 
     pub fn has_edge(&self, source: &NodeIndex<Ix>, target: &NodeIndex<Ix>) -> bool {
         self.find_edge(source, target).is_some()
+    }
+
+    pub fn find_node(&self, filter: impl Fn(&Node<N, Ix>) -> bool) -> Option<&Node<N, Ix>> {
+        self.nodes.iter().find(|n| filter(n))
     }
 
     pub fn find_edge(

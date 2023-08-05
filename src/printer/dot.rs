@@ -1,6 +1,6 @@
 use std::fmt::{Display, Write};
 
-use crate::graph::{Edge, Graph, GraphKind, Node};
+use crate::graph::{Edge, Graph, Node};
 
 static EDGE: [&str; 2] = ["->", "--"];
 static TYPE: [&str; 2] = ["digraph", "graph"];
@@ -64,10 +64,10 @@ impl Display for Attributes {
 /// # Example
 /// To print a graph into a `String` and print it to the console:
 /// ```
-/// use graphed::graph::{Graph, GraphKind, Node, Edge};
+/// use graphed::graph::{DiGraph, Node, Edge};
 /// use graphed::printer::dot::{print_graph_dot_extended, Attributes};
 ///
-/// let mut gr = Graph::<&str, usize>::new(GraphKind::Directed);
+/// let mut gr = DiGraph::<&str, usize>::new();
 /// let idx_n1 = gr.add_node("n1");
 /// let idx_n2 = gr.add_node("n2");
 /// gr.add_edge(idx_n1, idx_n2, 123);
@@ -99,9 +99,9 @@ pub fn print_graph_dot_extended<N, E>(
     let mut buf = String::new();
 
     let level = 1;
-    let (graph_type, edge_type) = match graph.kind() {
-        GraphKind::Directed => (TYPE[0], EDGE[0]),
-        GraphKind::Undirected => (TYPE[1], EDGE[1]),
+    let (graph_type, edge_type) = match graph.is_directed() {
+        true => (TYPE[0], EDGE[0]),
+        false => (TYPE[1], EDGE[1]),
     };
 
     buf.push_str(&format!("{} {{\n", graph_type));
@@ -167,10 +167,10 @@ pub fn print_graph_dot_extended<N, E>(
 /// # Example
 /// To print a graph into a `String` and print it to the console:
 /// ```
-/// use graphed::graph::{Graph, GraphKind};
+/// use graphed::graph::DiGraph;
 /// use graphed::printer::dot::print_graph_dot;
 ///
-/// let mut gr = Graph::<&str, usize>::new(GraphKind::Directed);
+/// let mut gr = DiGraph::<&str, usize>::new();
 /// let idx_n1 = gr.add_node("n1");
 /// let idx_n2 = gr.add_node("n2");
 /// gr.add_edge(idx_n1, idx_n2, 123);
@@ -183,9 +183,9 @@ pub fn print_graph_dot<N, E>(graph: &Graph<N, E>, out: &mut dyn Write) {
     let mut buf = String::new();
 
     let level = 1;
-    let (graph_type, edge_type) = match graph.kind() {
-        GraphKind::Directed => (TYPE[0], EDGE[0]),
-        GraphKind::Undirected => (TYPE[1], EDGE[1]),
+    let (graph_type, edge_type) = match graph.is_directed() {
+        true => (TYPE[0], EDGE[0]),
+        false => (TYPE[1], EDGE[1]),
     };
 
     buf.push_str(&format!("{} {{\n", graph_type));
@@ -215,11 +215,11 @@ pub fn print_graph_dot<N, E>(graph: &Graph<N, E>, out: &mut dyn Write) {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::graph::{Edge, Node};
+    use crate::graph::{DiGraph, Edge, Node};
 
     #[test]
     fn test_print_simple_digraph_with_dot() {
-        let mut gr = Graph::<&str, usize>::new(GraphKind::Directed);
+        let mut gr = DiGraph::<&str, usize>::new();
         let idx_n1 = gr.add_node("n1");
         let idx_n2 = gr.add_node("n2");
         let _ = gr.add_edge(idx_n1, idx_n2, 123);
@@ -231,7 +231,7 @@ pub mod tests {
 
     #[test]
     fn test_print_attributed_digraph_with_dot() {
-        let mut gr = Graph::<&str, usize>::new(GraphKind::Directed);
+        let mut gr = DiGraph::<&str, usize>::new();
         let idx_n1 = gr.add_node("n1");
         let idx_n2 = gr.add_node("n2");
         let _ = gr.add_edge(idx_n1, idx_n2, 123);

@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::indices::{DefaultIndex, EdgeIndex, Indexable, NodeIndex};
 
 /// A `Node` is used as the primary data structure in the `Graph`. It contains an index
@@ -117,23 +119,38 @@ impl<E, Ix: Indexable> Edge<E, Ix> {
     }
 }
 
-/// A `GraphKind` specifies the direction of edges in a `Graph`. It can be either `Directed`
-/// or `Undirected`.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum GraphKind {
-    Directed,
-    Undirected,
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub enum GraphError {
     NodeNotFound,
     EdgeNotFound,
 }
 
-/// A `Graph` is a data structure that can be used to represent a graph. It may
-/// be `GraphKind::Directed` or `GraphKind::Undirected`. Furthermore, it has a list of
-/// `Node`s and a list of `Edge`s.
+pub trait EdgeType {
+    fn is_directed() -> bool;
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Directed {}
+
+impl EdgeType for Directed {
+    #[inline]
+    fn is_directed() -> bool {
+        true
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Undirected {}
+
+impl EdgeType for Undirected {
+    #[inline]
+    fn is_directed() -> bool {
+        false
+    }
+}
+
+/// A `Graph` is a data structure that can be used to represent a graph. Furthermore, it
+/// has a list of `Node`s and a list of `Edge`s.
 ///
 /// # Type Parameters
 /// * `N`: The type of the associated data of the nodes.
@@ -154,33 +171,62 @@ pub enum GraphError {
 /// A simple graph with nodes and edges of type `usize` and two nodes that have a
 /// directed edge from node 1 to node 2:
 /// ```
-/// use graphed::graph::{Graph, GraphKind};
+/// use graphed::graph::DiGraph;
 ///
-/// let mut gr = Graph::<usize, usize>::new(GraphKind::Directed);
+/// let mut gr = DiGraph::<usize, usize>::new();
 /// let idx_node1 = gr.add_node(1);
 /// let idx_node2 = gr.add_node(2);
 /// gr.add_edge(idx_node1, idx_node2, 1);
 /// ```
 ///
 #[derive(Clone, Debug)]
-pub struct Graph<N, E, Ix: Indexable = DefaultIndex> {
-    kind: GraphKind,
+pub struct Graph<N, E, Ty = Directed, Ix: Indexable = DefaultIndex> {
     nodes: Vec<Node<N, Ix>>,
     edges: Vec<Edge<E, Ix>>,
+    ty: PhantomData<Ty>,
 }
 
-impl<N, E, Ix: Indexable> Graph<N, E, Ix> {
-    pub fn new(kind: GraphKind) -> Self {
+pub type DiGraph<N, E, Ix = DefaultIndex> = Graph<N, E, Directed, Ix>;
+pub type UnGraph<N, E, Ix = DefaultIndex> = Graph<N, E, Undirected, Ix>;
+
+impl<N, E> Graph<N, E, Directed> {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
         Graph {
-            kind,
             nodes: Vec::new(),
             edges: Vec::new(),
+            ty: PhantomData,
+        }
+    }
+}
+
+impl<N, E> Graph<N, E, Undirected> {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Graph {
+            nodes: Vec::new(),
+            edges: Vec::new(),
+            ty: PhantomData,
+        }
+    }
+}
+
+impl<N, E, Ty, Ix: Indexable> Graph<N, E, Ty, Ix>
+where
+    Ty: EdgeType,
+{
+    /// Creates a new [`Graph`] with the given estimated capacity.
+    pub fn with_capacity(nodes: usize, edges: usize) -> Self {
+        Graph {
+            nodes: Vec::with_capacity(nodes),
+            edges: Vec::with_capacity(edges),
+            ty: PhantomData,
         }
     }
 
-    /// Returns the kind of the graph.
-    pub fn kind(&self) -> &GraphKind {
-        &self.kind
+    #[inline]
+    pub fn is_directed(&self) -> bool {
+        Ty::is_directed()
     }
 
     /// Returns the number of nodes in the graph.
@@ -271,9 +317,13 @@ impl<N, E, Ix: Indexable> Graph<N, E, Ix> {
         source: &NodeIndex<Ix>,
         target: &NodeIndex<Ix>,
     ) -> Option<&EdgeIndex<Ix>> {
-        match self.kind {
-            GraphKind::Directed => self.find_directed_edge(source, target),
-            GraphKind::Undirected => self.find_undirected_edge(source, target),
+        if !self.is_directed() {
+            self.find_undirected_edge(source, target)
+        } else {
+            match self.nodes.get(source.index()) {
+                Some(node) => self.find_directed_edge(&node.index, target),
+                None => None,
+            }
         }
     }
 
@@ -342,7 +392,7 @@ pub mod tests {
 
     #[test]
     fn test_add_node() {
-        let mut graph = Graph::<usize, ()>::new(GraphKind::Directed);
+        let mut graph = DiGraph::<usize, ()>::new();
         let idx = graph.add_node(1);
 
         assert_eq!(idx.index(), 0);
@@ -351,7 +401,7 @@ pub mod tests {
 
     #[test]
     fn test_add_edge() {
-        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let mut graph = DiGraph::<usize, usize>::new();
         let source = graph.add_node(1);
         let target = graph.add_node(2);
 
@@ -363,7 +413,7 @@ pub mod tests {
 
     #[test]
     fn test_add_edge_error() {
-        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let mut graph = DiGraph::<usize, usize>::new();
         let source = graph.add_node(1);
         let target = graph.add_node(2);
 
@@ -387,7 +437,7 @@ pub mod tests {
 
     #[test]
     fn test_add_in_out_coming_index_to_node() {
-        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let mut graph = DiGraph::<usize, usize>::new();
         let source = graph.add_node(1);
         let target = graph.add_node(2);
 
@@ -402,7 +452,7 @@ pub mod tests {
 
     #[test]
     fn test_get_predecessor_of_node() {
-        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let mut graph = DiGraph::<usize, usize>::new();
         let idx_1 = graph.add_node(1);
         let idx_2 = graph.add_node(2);
         let idx_3 = graph.add_node(3);
@@ -419,7 +469,7 @@ pub mod tests {
 
     #[test]
     fn test_find_edge_directed() {
-        let mut graph = Graph::<usize, usize>::new(GraphKind::Directed);
+        let mut graph = DiGraph::<usize, usize>::new();
         let idx_1 = graph.add_node(1);
         let idx_2 = graph.add_node(2);
         let idx_3 = graph.add_node(3);
@@ -436,7 +486,7 @@ pub mod tests {
 
     #[test]
     fn test_find_edge_undirected() {
-        let mut graph = Graph::<usize, usize>::new(GraphKind::Undirected);
+        let mut graph = UnGraph::<usize, usize>::new();
         let idx_1 = graph.add_node(1);
         let idx_2 = graph.add_node(2);
         let idx_3 = graph.add_node(3);

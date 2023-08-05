@@ -13,9 +13,9 @@ graphed = "0.1.0"
 To create a graph with two nodes (Node 1 and Node 2) and an edge between them with a value of 1, you can do the following:
 
 ```rust
-use graphed::graph::{Graph, GraphKind};
+use graphed::graph::DiGraph;
 
-let mut gr = Graph::<&str, usize>::new(GraphKind::Directed);
+let mut gr = DiGraph::<&str, usize>::new();
 let idx_n1 = gr.add_node("Node 1");
 let idx_n2 = gr.add_node("Node 2");
 
@@ -24,12 +24,12 @@ let _ = gr.add_edge(idx_n1, idx_n2, 1);
 
 If you need a custom node or edge struct, e.g., for additional data, you can specify your structs and use them as the generic parameter of the Graph class. An example with a custom node (CustomNode) and a custom edge (CustomEdge) is shown below:
 ```rust
-use graphed::graph::{Graph, GraphKind};
+use graphed::graph::Graph;
 
 pub struct CustomNode(usize);
 pub struct CustomEdge(usize);
 
-let mut gr = Graph::<CustomNode, CustomEdge>::new(GraphKind::Directed);
+let mut gr = DiGraph::<CustomNode, CustomEdge>::new();
 let idx_n1 = gr.add_node(CustomNode(1));
 let idx_n2 = gr.add_node(CustomNode(2));
 

@@ -2,35 +2,30 @@ use std::fmt::{Display, Write};
 
 use crate::graph::{Edge, Graph, GraphKind, Node};
 
-static EDGE: [&'static str; 2] = ["->", "--"];
-static TYPE: [&'static str; 2] = ["digraph", "graph"];
+static EDGE: [&str; 2] = ["->", "--"];
+static TYPE: [&str; 2] = ["digraph", "graph"];
 
 pub mod attributes {
     /// Text label attached to objects.
-    pub const LABEL: &'static str = "label";
+    pub const LABEL: &str = "label";
     /// The shape of a node.
-    pub const SHAPE: &'static str = "shape";
+    pub const SHAPE: &str = "shape";
     /// Basic drawing color for graphics, not text.
-    pub const COLOR: &'static str = "color";
+    pub const COLOR: &str = "color";
     /// Color used for text.
-    pub const FONTCOLOR: &'static str = "fontcolor";
+    pub const FONTCOLOR: &str = "fontcolor";
 }
 
 /// `Attributes` can be used to customize the layout of DOT elements, i.e., `Node`s, `Edge`s or
 /// `Graph`s. Please note that the attribute names and values are case-sensetive in DOT.
 /// A list of supported attributes can be found here: [https://graphviz.org/doc/info/attrs.html]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Attributes {
     inner: Vec<(&'static str, String)>,
 }
 
 /// A wrapper that contains all attributes for a specific element, i.e., `Node`s or `Edge`s.
 impl Attributes {
-    /// Creates a new instance of `Attributes`.
-    pub fn new() -> Self {
-        Self { inner: Vec::new() }
-    }
-
     /// Add a new entry to the the list of attributes.
     pub fn add<T: Into<String>>(&mut self, key: &'static str, value: T) {
         self.inner.push((key, value.into()));
@@ -38,10 +33,9 @@ impl Attributes {
 
     /// Removes an entry from the attributes.
     pub fn remove(&mut self, key: &'static str) {
-        match self.inner.iter().position(|(k, _)| k.eq(&key)) {
-            Some(pos) => self.inner.remove(pos),
-            _ => return,
-        };
+        if let Some(position) = self.inner.iter().position(|(k, _)| k.eq(&key)) {
+            self.inner.remove(position);
+        }
     }
 }
 
@@ -79,14 +73,14 @@ impl Display for Attributes {
 /// gr.add_edge(idx_n1, idx_n2, 123);
 ///
 /// let node_renderer = |node: &Node<&str>| -> Option<Attributes> {
-///     let mut attrs = Attributes::new();
+///     let mut attrs = Attributes::default();
 ///     attrs.add("label", node.data().to_string());
 ///
 ///     Some(attrs)
 /// };
 ///
 /// let edge_renderer = |edge: &Edge<usize>| -> Option<Attributes> {
-///     let mut attrs = Attributes::new();
+///     let mut attrs = Attributes::default();
 ///     attrs.add("label", edge.data().to_string());
 ///
 ///     Some(attrs)
@@ -156,7 +150,7 @@ pub fn print_graph_dot_extended<N, E>(
         }
     }
 
-    buf.push_str("}");
+    buf.push('}');
     out.write_str(buf.as_str()).unwrap();
 }
 
@@ -214,7 +208,7 @@ pub fn print_graph_dot<N, E>(graph: &Graph<N, E>, out: &mut dyn Write) {
         ));
     }
 
-    buf.push_str("}");
+    buf.push('}');
     out.write_str(buf.as_str()).unwrap();
 }
 
@@ -243,7 +237,7 @@ pub mod tests {
         let _ = gr.add_edge(idx_n1, idx_n2, 123);
 
         let node_printer = |node: &Node<&str>| -> Option<Attributes> {
-            let mut attrs = Attributes::new();
+            let mut attrs = Attributes::default();
             attrs.add(attributes::LABEL, node.data().to_string());
             attrs.add(attributes::FONTCOLOR, "red");
 
@@ -251,7 +245,7 @@ pub mod tests {
         };
 
         let edge_printer = |edge: &Edge<usize>| -> Option<Attributes> {
-            let mut attrs = Attributes::new();
+            let mut attrs = Attributes::default();
             attrs.add(attributes::LABEL, edge.data().to_string());
 
             Some(attrs)

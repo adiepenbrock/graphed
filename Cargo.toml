@@ -1,12 +1,10 @@
 [package]
 name = "graphed"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "A crate to implement graph-based functionality"
 authors = ["Andreas Diepenbrock"]
-
 repository = "https://github.com/adiepenbrock/graphed"
-
 
 [dependencies]

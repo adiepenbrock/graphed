@@ -21,6 +21,16 @@ pub struct Node<N, Ix: Indexable = DefaultIndex> {
 }
 
 impl<N, Ix: Indexable> Node<N, Ix> {
+    /// Creates a new [`Node`] with the given index and data.
+    ///
+    /// # Parameters
+    ///
+    /// * `idx` - The [`NodeIndex`] to assign to the new [`Node`].
+    /// * `data` - The data to associate with the [`Node`].
+    ///
+    /// # Returns
+    ///
+    /// The newly created Node with empty incoming and outgoing edge lists.
     pub fn new(idx: NodeIndex<Ix>, data: N) -> Self {
         Node {
             index: idx,
@@ -30,20 +40,38 @@ impl<N, Ix: Indexable> Node<N, Ix> {
         }
     }
 
-    /// Returns the `NodeIndex` of the node.
+    /// Returns the [`NodeIndex`] of the node.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the [`NodeIndex`] that identifies this node.
     pub fn index(&self) -> &NodeIndex<Ix> {
         &self.index
     }
 
-    /// Returns the associated data of the node.
+    /// Returns a reference to the data associated with this node.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the node's data.
     pub fn data(&self) -> &N {
         &self.inner
     }
 
+    /// Returns a slice reference to the incoming edge indices.
+    ///
+    /// # Returns
+    ///
+    /// A slice reference to the vector containing the indices of all incoming edges to this node.
     pub fn incoming(&self) -> &[EdgeIndex<Ix>] {
         &self.incoming
     }
 
+    /// Returns a slice reference to the outgoing edge indices.
+    ///
+    /// # Returns
+    ///
+    /// A slice reference to the vector containing the indices of all outgoing edges from this node.
     pub fn outgoing(&self) -> &[EdgeIndex<Ix>] {
         &self.outgoing
     }
@@ -69,6 +97,19 @@ pub struct Edge<E, Ix: Indexable = DefaultIndex> {
 }
 
 impl<E, Ix: Indexable> Edge<E, Ix> {
+    /// Creates a new [`Edge`] with the given index, source, target, and data.
+    ///
+    /// # Parameters
+    ///
+    /// * `idx` - The index to assign to the new [`Edge`].
+    /// * `source` - The source [`NodeIndex`] for the [`Edge`].
+    /// * `target` - The target [`NodeIndex`] for the [`Edge`].
+    /// * `data` - The data to assign to the [`Edge`].
+    ///
+    /// # Returns
+    ///  
+    /// The newly created [`Edge`] with the provided index, source, target, and data.
+    /// The weight is initialized to 1.
     pub fn new(idx: EdgeIndex<Ix>, source: NodeIndex<Ix>, target: NodeIndex<Ix>, data: E) -> Self {
         Edge {
             index: idx,
@@ -78,6 +119,19 @@ impl<E, Ix: Indexable> Edge<E, Ix> {
         }
     }
 
+    /// Creates a new weighted [`Edge`] with the given parameters.
+    ///
+    /// # Parameters
+    ///
+    /// * `idx` - The index to assign to the new [`Edge`].
+    /// * `source` - The source [`NodeIndex`] for the [`Edge`].
+    /// * `target` - The target [`NodeIndex`] for the [`Edge`].
+    /// * `data` - The data to assign to the [`Edge`].
+    /// * `weight` - The weight to assign to the [`Edge`].
+    ///
+    /// # Returns
+    ///
+    /// The newly created weighted [`Edge`] with the provided parameters.
     pub fn new_weighted(
         idx: EdgeIndex<Ix>,
         source: NodeIndex<Ix>,
@@ -93,27 +147,47 @@ impl<E, Ix: Indexable> Edge<E, Ix> {
         }
     }
 
-    /// Returns the `EdgeIndex` of the edge.
+    /// Returns the [`EdgeIndex`] of the edge.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the [`EdgeIndex`] that identifies this edge.
     pub fn index(&self) -> &EdgeIndex<Ix> {
         &self.index
     }
 
-    /// Returns the associated data of the edge.
+    /// Returns a reference to the data associated with this edge.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the edge's data.
     pub fn data(&self) -> &E {
         &self.inner
     }
 
     /// Returns the weight of the edge.
+    ///
+    /// # Returns
+    ///
+    /// The weight of the edge as a `usize`.
     pub fn weight(&self) -> usize {
         self.weight
     }
 
-    /// Returns the `NodeIndex` of the source node.
+    /// Returns a reference to the source [`NodeIndex`] of this edge.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the [`NodeIndex`] of the source node.
     pub fn source(&self) -> &NodeIndex<Ix> {
         &self.node[0]
     }
 
-    /// Returns the `NodeIndex` of the target node.
+    /// Returns a reference to the target [`NodeIndex`] of this edge.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the [`NodeIndex`] of the target node.
     pub fn target(&self) -> &NodeIndex<Ix> {
         &self.node[1]
     }
@@ -186,10 +260,44 @@ pub struct Graph<N, E, Ty = Directed, Ix: Indexable = DefaultIndex> {
     ty: PhantomData<Ty>,
 }
 
+/// Type alias for a directed Graph.
+///
+/// # Type Parameters
+///
+/// * `N` - The node data type.
+/// * `E` - The edge data type.  
+/// * `Ix` - The index type, default is [`DefaultIndex`].
+///
+/// # Example
+///
+/// ```rust
+/// // Create a directed graph with u32 node and edge types
+/// let graph: DiGraph<u32, u32> = DiGraph::new();
+/// ```
 pub type DiGraph<N, E, Ix = DefaultIndex> = Graph<N, E, Directed, Ix>;
+
+/// Type alias for an undirected Graph.
+///
+/// # Type Parameters
+///
+/// * `N` - The node data type.
+/// * `E` - The edge data type.
+/// * `Ix` - The index type, default is [`DefaultIndex`].
+///
+/// # Example
+///
+/// ```rust
+/// // Create an undirected graph with u32 node and edge types
+/// let graph: UnGraph<u32, u32> = UnGraph::new();
+/// ```
 pub type UnGraph<N, E, Ix = DefaultIndex> = Graph<N, E, Undirected, Ix>;
 
 impl<N, E> Graph<N, E, Directed> {
+    /// Creates a new empty directed Graph.
+    ///
+    /// # Returns  
+    ///
+    /// A new directed Graph with empty nodes and edges vectors.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Graph {
@@ -201,6 +309,11 @@ impl<N, E> Graph<N, E, Directed> {
 }
 
 impl<N, E> Graph<N, E, Undirected> {
+    /// Creates a new empty undirected Graph.
+    ///
+    /// # Returns  
+    ///
+    /// A new undirected Graph with empty nodes and edges vectors.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Graph {
@@ -215,7 +328,21 @@ impl<N, E, Ty, Ix: Indexable> Graph<N, E, Ty, Ix>
 where
     Ty: EdgeType,
 {
-    /// Creates a new [`Graph`] with the given estimated capacity.
+    /// Creates a new Graph with pre-allocated capacity for nodes and edges.
+    ///
+    /// # Parameters
+    ///
+    /// * `nodes` - The capacity for the node vector.
+    /// * `edges` - The capacity for the edge vector.  
+    ///
+    /// # Returns
+    ///   
+    /// A new Graph with pre-allocated capacity for nodes and edges.
+    ///
+    /// # Behavior
+    ///
+    /// Uses `Vec::with_capacity` to pre-allocate capacity for the node and edge vectors when
+    /// creating the Graph.
     pub fn with_capacity(nodes: usize, edges: usize) -> Self {
         Graph {
             nodes: Vec::with_capacity(nodes),
@@ -224,32 +351,72 @@ where
         }
     }
 
+    /// Returns whether the graph is directed.
+    ///
+    /// # Returns
+    ///
+    /// True if the graph is directed, false if undirected.
+    ///
+    /// # Behavior
+    ///
+    /// Calls the `is_directed()` method on the graph's edge type `Ty` to determine if edges are
+    /// directed.
     #[inline]
     pub fn is_directed(&self) -> bool {
         Ty::is_directed()
     }
 
     /// Returns the number of nodes in the graph.
+    ///
+    /// # Returns
+    ///
+    /// The number of nodes in the graph as a `usize`.
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
 
     /// Returns the number of edges in the graph.
+    ///
+    /// # Returns
+    ///
+    /// The number of edges in the graph as a `usize`.
     pub fn edge_count(&self) -> usize {
         self.edges.len()
     }
 
-    /// Returns a reference to the list of nodes.
+    /// Returns a reference to the raw internal vector of Nodes.
+    ///
+    /// # Returns
+    ///
+    /// A slice reference to the vector of Nodes.
     pub fn raw_nodes(&self) -> &[Node<N, Ix>] {
         &self.nodes
     }
 
-    /// Returns a reference to the list of edges.
+    /// Returns a reference to the raw internal vector of Edges.
+    ///
+    /// # Returns
+    ///
+    /// A slice reference to the vector of Edges.
     pub fn raw_edges(&self) -> &[Edge<E, Ix>] {
         &self.edges
     }
 
-    /// Add a node with associated data to the graph. Returns the `NodeIndex` of the new node.
+    /// Adds a new node to the graph with the given data.
+    ///
+    /// # Parameters
+    ///
+    /// * `data` - The data to associate with the new node.
+    ///
+    /// # Returns  
+    ///
+    /// The [`NodeIndex`] of the newly added node.
+    ///
+    /// # Behavior
+    ///
+    /// - Creates a new [`Node`] with the next available index and the given data.
+    /// - Adds the new [`Node`] to the nodes vector.
+    /// - Returns the index of the new [`Node`].
     pub fn add_node(&mut self, data: N) -> NodeIndex<Ix> {
         let idx = NodeIndex::new(self.nodes.len());
         let node = Node::new(idx, data);
@@ -258,10 +425,25 @@ where
         idx
     }
 
-    /// Add an edge from `source` to `target` with associated `data` to the graph. Before
-    /// adding an edge to the graph it will be checked that the source and target nodes exist.
-    /// If the edge is added successfully, the `EdgeIndex` of the new edge is returned.
-    /// Otherwise, a `GraphError` is returned.
+    /// Adds a new directed edge to the graph between the given source and target nodes.
+    ///
+    /// # Parameters
+    ///
+    /// * `source` - The [`NodeIndex`] of the source node.
+    /// * `target` - The [`NodeIndex`] of the target node.
+    /// * `data` - The data to associate with the new edge.
+    ///
+    /// # Returns
+    ///
+    /// Returns the index of the new edge if added successfully.
+    /// Returns a [`GraphError`] if either node does not exist.
+    ///
+    /// # Behavior
+    ///
+    /// - Checks that the source and target nodes exist.
+    /// - Creates a new [`Edge`] with the given data between the nodes.
+    /// - Adds the new edge index to the outgoing edges of the source node.
+    /// - Adds the new edge index to the incoming edges of the target node.
     pub fn add_edge(
         &mut self,
         source: NodeIndex<Ix>,
@@ -292,26 +474,92 @@ where
         Ok(idx)
     }
 
-    /// Returns a reference to the node with the given `idx`. If the node does not exist,
-    /// `None` is returned.
+    /// Gets an immutable reference to the [`Node`] with the given index.
+    ///
+    /// # Parameters
+    ///
+    /// * `idx` - The [`NodeIndex`] of the [`Node`] to get.
+    ///
+    /// # Returns
+    ///
+    /// Returns a reference to the Node if found.
+    /// Returns None if no Node exists with the given index.
     pub fn get_node(&self, idx: NodeIndex<Ix>) -> Option<&Node<N, Ix>> {
         self.nodes.get(idx.index())
     }
 
-    /// Returns a mutable reference to the node with the given `idx`. If the node does not
-    /// exist, `None` is returned.
+    /// Gets a mutable reference to the Node with the given index.
+    ///
+    /// # Parameters
+    ///
+    /// * `idx` - The [`NodeIndex`] of the [`Node`] to get.
+    ///
+    /// # Returns
+    ///  
+    /// Returns a mutable reference to the [`Node`] if found.
+    /// Returns None if no Node exists with the given index.
     pub fn get_node_mut(&mut self, idx: NodeIndex<Ix>) -> Option<&mut Node<N, Ix>> {
         self.nodes.get_mut(idx.index())
     }
 
+    /// Checks if an edge exists between the given source and target node indices.
+    ///
+    /// # Parameters
+    ///
+    /// * `source` - The [`NodeIndex`] of the source node.
+    /// * `target` - The [`NodeIndex`] of the target node.
+    ///
+    /// # Returns
+    ///
+    /// True if an edge exists between the nodes, false otherwise.
     pub fn has_edge(&self, source: &NodeIndex<Ix>, target: &NodeIndex<Ix>) -> bool {
         self.find_edge(source, target).is_some()
     }
 
+    /// Finds the first node in the graph that matches the given filter function.
+    ///
+    /// # Parameters
+    ///
+    /// * `filter` - A function that takes a reference to a [`Node`] and returns a bool.
+    ///
+    /// # Returns
+    ///
+    /// Returns a reference to the first [`Node`] where `filter` returns `true`.
+    /// Returns `None` if no node matches the filter.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use graphed::{Graph, Node};
+    ///
+    /// let mut graph = DiGraph::<&str, ()>::new();
+    /// _ = graph.add_node("target");
+    /// let node = graph.find_node(|node| node.data() == "target");
+    /// ```
     pub fn find_node(&self, filter: impl Fn(&Node<N, Ix>) -> bool) -> Option<&Node<N, Ix>> {
         self.nodes.iter().find(|n| filter(n))
     }
 
+    /// Finds an edge between the given source and target node indices.
+    ///
+    /// For undirected graphs, searches for an undirected edge between the nodes.
+    /// For directed graphs, searches for a directed edge from the source to the target.
+    ///
+    /// # Parameters
+    ///
+    /// * `source` - The [`NodeIndex`] of the source node.
+    /// * `target` - The [`NodeIndex`] of the target node.  
+    ///
+    /// # Returns
+    ///
+    /// Returns the [`EdgeIndex`] if an edge exists between the nodes.
+    /// Returns None if no edge exists.
+    ///
+    /// # Behavior
+    ///
+    /// - For undirected graphs, checks both the outgoing edges of the source node and the incoming
+    /// edges of the target node.
+    /// - For directed graphs, checks only the outgoing edges of the source node.
     pub fn find_edge(
         &self,
         source: &NodeIndex<Ix>,
@@ -327,6 +575,23 @@ where
         }
     }
 
+    /// Finds a directed edge between the given source and target node indices.
+    ///
+    /// # Parameters
+    ///
+    /// * `source` - The [`NodeIndex`] of the source node.
+    /// * `target` - The [`NodeIndex`] of the target node.
+    ///
+    /// # Returns  
+    ///
+    /// Returns the edge index of the directed edge from source to target if found.
+    /// Returns None if no directed edge exists from source to target.
+    ///
+    /// # Description
+    ///
+    /// This checks only the outgoing edges of the source node to find an edge that has the target
+    /// node as its target. Since this is a directed graph, the edge must go specifically from the
+    /// source to the target node.
     pub fn find_directed_edge(
         &self,
         source: &NodeIndex<Ix>,
@@ -345,6 +610,23 @@ where
         None
     }
 
+    /// Finds an undirected edge between the given source and target node indices.
+    ///
+    /// # Parameters
+    ///
+    /// * `source` - The [`NodeIndex`] of the source node.
+    /// * `target` - The [`NodeIndex`] of the target node.
+    ///
+    /// # Returns
+    ///
+    /// Returns the edge index of the undirected edge between the source and target nodes if found.
+    /// Returns None if no undirected edge exists between the nodes.
+    ///
+    /// # Description
+    ///
+    /// This checks the outgoing edges of the source node and the incoming edges of the target node
+    /// to find an edge that connects the two nodes in either direction. Since this is an undirected
+    /// graph, the edge can go from source to target or from target to source.
     pub fn find_undirected_edge(
         &self,
         source: &NodeIndex<Ix>,

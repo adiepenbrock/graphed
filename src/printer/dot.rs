@@ -26,12 +26,31 @@ pub struct Attributes {
 
 /// A wrapper that contains all attributes for a specific element, i.e., `Node`s or `Edge`s.
 impl Attributes {
-    /// Add a new entry to the the list of attributes.
+    /// Adds a new attribute key-value pair to the [`Attributes`] struct.
+    ///
+    /// # Parameters
+    ///
+    /// * `key` - The attribute key, must be a static string reference.
+    /// * `value` - The attribute value, converted into a String.
+    ///
+    /// # Behavior
+    ///
+    /// Pushes a new (key, value) tuple onto the inner vector. The value is
+    /// converted into a String using the Into trait.
     pub fn add<T: Into<String>>(&mut self, key: &'static str, value: T) {
         self.inner.push((key, value.into()));
     }
 
     /// Removes an entry from the attributes.
+    ///
+    /// # Parameters
+    ///
+    /// * `key` - The attribute key to remove
+    ///
+    /// # Behavior
+    ///
+    /// Iterates through `inner` to find the position of the entry with the matching key.
+    /// If found, removes the entry at that position using `Vec::remove`.
     pub fn remove(&mut self, key: &'static str) {
         if let Some(position) = self.inner.iter().position(|(k, _)| k.eq(&key)) {
             self.inner.remove(position);

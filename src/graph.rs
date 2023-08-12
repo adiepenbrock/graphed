@@ -8,7 +8,7 @@ use crate::indices::{DefaultIndex, EdgeIndex, Indexable, NodeIndex};
 /// # Type Parameters
 /// * `N`: The type of the associated data.
 /// * `Ix`: The type of the index. This is usually `DefaultIndex` which is `u32`.  
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Node<N, Ix: Indexable = DefaultIndex> {
     /// The index of the node. This is used to identify the node in the graph.
     index: NodeIndex<Ix>,
@@ -386,6 +386,22 @@ where
     }
 }
 
+impl<N, E, Ty, Ix: Indexable> std::ops::Index<NodeIndex<Ix>> for Graph<N, E, Ty, Ix> {
+    type Output = Node<N, Ix>;
+
+    fn index(&self, index: NodeIndex<Ix>) -> &Self::Output {
+        &self.nodes[index.index()]
+    }
+}
+
+impl<N, E, Ty, Ix: Indexable> std::ops::Index<EdgeIndex<Ix>> for Graph<N, E, Ty, Ix> {
+    type Output = Edge<E, Ix>;
+
+    fn index(&self, index: EdgeIndex<Ix>) -> &Self::Output {
+        &self.edges[index.index()]
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;
@@ -503,5 +519,27 @@ pub mod tests {
         let e3 = graph.find_undirected_edge(&idx_2, &idx_1);
         assert!(e3.is_some());
         assert_eq!(e3.unwrap().index(), 0);
+    }
+
+    #[test]
+    fn test_index_graph_by_nodeindex() {
+        let mut g = DiGraph::<usize, usize>::new();
+        let n1 = g.add_node(1);
+        let n2 = g.add_node(2);
+
+        assert_eq!(*g[n1].data(), 1);
+        assert_eq!(*g[n2].data(), 2);
+    }
+
+    #[test]
+    fn test_index_graph_by_edgeindex() {
+        let mut g = DiGraph::<usize, usize>::new();
+        let n1 = g.add_node(1);
+        let n2 = g.add_node(2);
+        let e1 = g.add_edge(n1, n2, 3).unwrap();
+
+        assert_eq!(*g[n1].data(), 1);
+        assert_eq!(*g[n2].data(), 2);
+        assert_eq!(*g[e1].data(), 3);
     }
 }
